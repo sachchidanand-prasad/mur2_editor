@@ -1,0 +1,10 @@
+<table id="user_articles">
+        <tr valign="top">
+            <td>
+                <!-- it still editing status so we will open the editor -->
+                <a href="{{ url_for('editor', articleid=articlei.id)  }}">
+                {{ articlei.title}}: <b>{{ articlei.abstract }}</b>
+                </a>                
+            </td>
+        </tr>
+</table>

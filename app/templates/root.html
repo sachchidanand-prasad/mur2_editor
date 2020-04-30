@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>μr²</title>
+
+    <style>
+
+#fullDiv {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    position: fixed;
+    text-align: center;
+}
+
+img {
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
+    </style>
+</head>
+<body>
+    <div id="fullDiv">
+        <a href="{{ url_for('login') }}"><img src="/static/images/Mur2_logo_gfsartemisia_it.png" alt="μr²"></a>
+    </div>
+</body>
+</html>
