@@ -25,6 +25,13 @@
                 <img alt="{{ file.addresss }}" src="{{ file.addresss }}">
             </a>
         </div>
+        <div>
+            <form action="{{ url_for('main.delete_object') }}" method="post">
+                {{ deleteform.object_id(value=file.id) }} {{ deleteform.object_type(value="file" ) }}
+                <input class="fas fa-trash control-item" type="submit" name="{{ _("Delete file") }}" value="&#xf1f8;
+" >        
+            </form>
+        </div>
     </div>
 {% endfor %}
 </div>

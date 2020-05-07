@@ -146,6 +146,8 @@ class Images(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     addresss = db.Column(db.String(40), index=False)
     
+    def __repr__(self):
+        return '<Image {}>'.format(self.addresss)
     
 # linkt the Article and Writers table together across a third table
 #   doc: https://docs.sqlalchemy.org/en/13/orm/extensions/associationproxy.html

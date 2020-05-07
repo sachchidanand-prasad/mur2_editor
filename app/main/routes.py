@@ -8,6 +8,7 @@ from flask_login import current_user, login_required, logout_user
 from flask import render_template, current_app
 # errors
 from flask import abort
+from flask_babel import lazy_gettext as _l
 
 # the part of the applications
 from app.auth import bp
@@ -20,6 +21,8 @@ from app.main.forms import SearchForm, UploadForm, photos, EditProfileForm, Dele
 from app.auth.email import send_password_reset_email
 # blueprint
 from app.main import bp
+# delete directory
+import shutil
 
 # recordin last user logging
 from flask import g
@@ -83,7 +86,7 @@ def editor(articleid):
     
         # Article not in editing status we redirect to reading
         if article.status != 'editing':
-            flash('You can not edit this article')
+            flash(_l('You can not edit this article'))
             return redirect(url_for('main.reader', article_id=article.id) )
     
     wordpresslogin = False
@@ -203,7 +206,7 @@ def markdownsave():
             db.session.commit()
     
     # return a OK json 
-    flash("Your changes have been saved.")
+    flash(_("Your changes have been saved."))
     return jsonify(result="OK")
     
 
@@ -212,12 +215,11 @@ def markdownsave():
 def delete_object():
         # which kind of object we delete 'article' etc...
         object_type = request.form['object_type']
-        # what is the DB id of the object
-        object_id = int(request.form['object_id'])  
+        object_id = int(request.form['object_id']) 
     
         # check object type
-        if object_type != 'article' and object_type != 'user' :
-            abort(make_response("Object tyőe should be 'article' or 'user'!", 400))
+        if object_type != 'article' and object_type != 'user' and object_type != 'file' :
+            abort(make_response(_l("Object type should be 'article', 'file' or 'user'!"), 400))
         
         if object_type == 'article' :
             articleRelation =   Article.query.filter_by(id=object_id).join( WriterRelationship ).join(User).add_columns( User.id ).all()
@@ -228,13 +230,14 @@ def delete_object():
                     canEdit = True
                     break
             if not canEdit:
-                abort(make_response("User no right to delete this Article.", 401))        
+                abort(make_response(_l("User no right to delete this") + _l("Article"), 401))        
             else:
                 # delete
                 Article.query.filter_by(id=object_id).delete()
                 db.session.commit()
             return redirect(url_for('main.user', username=current_user.username ))
         elif object_type == 'user' :
+
             # delete just the own user is possible
             # delete Articles
             articles = Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id )
@@ -247,6 +250,21 @@ def delete_object():
             # logout
             logout_user()
             return redirect(url_for('main.index'))
+        elif object_type == 'file' :
+            # what is the DB id of the object
+            object_id = request.form['object_id']
+            # check user is the owner of the file
+            i = Images.query.filter_by(id=object_id).first_or_404()
+            if i.user_id != current_user.id:
+                abort(make_response(_l("User no right to delete this") + _l("File"), 401)) 
+            else:
+                # delete the file
+                os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], current_user.username, i.addresss.split("/")[-1]))
+                # delete from db
+                Images.query.filter_by(id=object_id).delete()
+                db.session.commit()
+                return redirect(url_for('main.media'))
+
         
     
 # reading an article
@@ -270,7 +288,7 @@ def edit_profile():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
         db.session.commit()
-        flash('Your changes have been saved.')
+        flash(_l('Your changes have been saved.'))
         return redirect(url_for('main.edit_profile'))
     elif request.method == 'GET':
         form.username.data = current_user.username
@@ -318,7 +336,6 @@ def  make_pandoc_md(mdtxt):
             # change $$ if it is in line
             points = []
             for m in re.finditer(r'(?:(?<=(?: |\w))\$\$([^\n\$]+?)\$\$)|(?:\$\$([^\n\$]+?)\$\$(?=(?: |\w)))',  mdtxt):
-                print(m.start(),  m.end(),  m.group(0))
                 points.append( (m.start(), m.end()) )
             for m in reversed(points):
                 mdtxt = mdtxt[:m[0]] + ' $' + mdtxt[m[0]:m[1]+1].replace('$$', '').strip() + '$ '+  mdtxt[m[1]+1:]
@@ -361,10 +378,8 @@ def exportdata():
         destination = request.form['destination']
         # save to Wordpress.com
         if destination == 'wp':  
-            print("hello")
             article_id = (request.form['article_id'])
             wpcom_id = (request.form['wpcom_id'])
-            print("hello",article_id, wpcom_id  )
 
             if article_id != "-2" :
                 a =  Article.query.filter_by(id=article_id).first_or_404()
@@ -417,7 +432,7 @@ def exportdata():
             dirname = make_latex(mdtxt, article_title, article_abstract, language)
 
             # clear up tmp files
-            # ???
+            #   do in cron ass it is troublesome to be sure it was transfared before deleteing
             
             return send_file(os.path.join(dirname, 'mur2.tex'))
             
@@ -432,7 +447,14 @@ import os
 @login_required
 def media():
     form = UploadForm()
+    deleteform = DeleteProfileForm()
     if request.method == 'POST':
+        # check how many files the user have
+        path = os.path.join(current_app.config['UPLOAD_FOLDER'], current_user.username)
+        userfilesize = sum(os.path.getsize(os.path.join(path, f)) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)))
+        if userfilesize > current_app.config['MAX_USER_FILES_SIZE']:
+            flash(_l("No more disk space quota for ")+current_user.username)
+        
         filename = photos.save(form.photo.data, folder=current_user.username )
         file_url = photos.url(filename)
         
@@ -443,4 +465,4 @@ def media():
         
         return redirect(url_for('main.media'))
     user_files = Images.query.filter_by(user_id=current_user.id).all()
-    return render_template('media.html', form=form, files=user_files)
+    return render_template('media.html', form=form, files=user_files, deleteform=deleteform)
