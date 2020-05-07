@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
+{% block header %} 
+    <link rel="stylesheet" href="/static/css/mur2_media.css">   
+
+{% endblock %}
+
+
 {% block content %}
-<h1>Media files</h1>
+<h1>{{ _("Media files") }}</h1>
 <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ form.photo }}
@@ -11,9 +17,15 @@
     {{ form.submit }}
 </form>
 
+<div id="media_files" >
 {% for file in files %}
-<br>
-<img alt="{{ file.addresss }}" src="{{ file.addresss }}">
+    <div class="media_file">
+        <div class="gallery">
+            <a target="_blank" href="{{ file.addresss }}">
+                <img alt="{{ file.addresss }}" src="{{ file.addresss }}">
+            </a>
+        </div>
+    </div>
 {% endfor %}
-   
+</div>
 {% endblock %}

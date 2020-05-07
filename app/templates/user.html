@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="undermain_menu" id="user_profile">
+
     <div id="user_profil_overview" >
         <div id="avator"><img src="{{ user.avatar(128) }}"></div>
         <div id="profile_overview">
@@ -14,14 +14,13 @@
         </div>
     </div>
     <!-- Article -->
-    <div class="control-input" ><a href="{{ url_for('editor', articleid=-1)  }}">{{ _("New Article") }}</a> </div>
+    <div class="control-item" ><a href="{{ url_for('editor', articleid=-1)  }}">{{ _("New Article") }}</a> </div>
     <div class="normalpadding">
     {% for articlei in articles %}
         {% include 'article.html' %}
     {% endfor %}                
     </div>
-    <div id="foot"> © 2020 μr² {{ _("editor") }} </div>
-</div>
+    
 
 
     
