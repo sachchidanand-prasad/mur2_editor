@@ -23,10 +23,13 @@ class EditProfileForm(FlaskForm):
         if username.data != self.original_username:
             user = User.query.filter_by(username=self.username.data).first()
             if user is not None:
-                raise ValidationError('Please use a different username.')
-                
-                
+                raise ValidationError('Please use a different username.')                               
 
+class DeleteProfileForm(FlaskForm):
+    object_id = HiddenField('object_id', validators=[DataRequired()])
+    object_type = HiddenField('object_type', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+                
 # search form 
 # doc: https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvi-full-text-search
 from flask import request

@@ -20,4 +20,9 @@
         </p>
         <p>{{ form.submit() }}</p>
     </form>
+    
+    <form action="{{ url_for('main.delete_object') }}" method="post">
+        {{ deleteform.object_id(value=userid ) }} {{ deleteform.object_type(value="user" ) }}
+        <input class="control-item" type="submit" name="{{ _("Delete user") }}" value="{{ _("Delete user") }}" >        
+    </form>
 {% endblock %}

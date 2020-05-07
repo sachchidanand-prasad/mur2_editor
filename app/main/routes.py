@@ -4,7 +4,7 @@ The RestAPI addresses
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from flask import render_template, current_app
 # errors
 from flask import abort
@@ -16,7 +16,7 @@ from app.models import User, Article, WriterRelationship, Images
 # the db
 from app import db
 # forms
-from app.main.forms import SearchForm, UploadForm, photos, EditProfileForm
+from app.main.forms import SearchForm, UploadForm, photos, EditProfileForm, DeleteProfileForm
 from app.auth.email import send_password_reset_email
 # blueprint
 from app.main import bp
@@ -138,8 +138,6 @@ def markdownsave():
     htmltxt = request.files['htmlfile'].read()
 
     # some encoding 
-    # markdowntxt = markdowntxt[2:-1].encode('utf-8').decode('unicode_escape')    
-    # htmltxt = htmltxt[2:-1].encode('utf-8').decode('unicode_escape')
     markdowntxt = markdowntxt.decode('utf-8')
     htmltxt = htmltxt.decode('utf-8')
 
@@ -153,7 +151,6 @@ def markdownsave():
     #   new Article
     if article_id == -1:
         # check the Article do not exist
-        # a = Article.query.filter_by(title=article_title).filter_by(abstract=article_abstract).filter_by(version=0).first()
         a = Article.query.filter_by(title=article_title).filter_by(abstract=article_abstract).join(WriterRelationship).filter(WriterRelationship.writer_id == current_user.id).first()
         if a is not None:
             # we should return something more meaningfull ???
@@ -209,6 +206,48 @@ def markdownsave():
     return jsonify(result="OK")
     
 
+@bp.route('/delete', methods=["POST"])
+@login_required
+def delete_object():
+        # which kind of object we delete 'article' etc...
+        object_type = request.form['object_type']
+        # what is the DB id of the object
+        object_id = int(request.form['object_id'])  
+    
+        # check object type
+        if object_type != 'article' and object_type != 'user' :
+            abort(make_response("Object tyőe should be 'article' or 'user'!", 400))
+        
+        if object_type == 'article' :
+            articleRelation =   Article.query.filter_by(id=object_id).join( WriterRelationship ).join(User).add_columns( User.id ).all()
+            # check user have right to delete the Article
+            canEdit = False
+            for ar in articleRelation:
+                if ar.id == current_user.id:
+                    canEdit = True
+                    break
+            if not canEdit:
+                abort(make_response("User no right to delete this Article.", 401))        
+            else:
+                # delete
+                Article.query.filter_by(id=object_id).delete()
+                db.session.commit()
+            return redirect(url_for('main.user', username=current_user.username ))
+        elif object_type == 'user' :
+            # delete just the own user is possible
+            # delete Articles
+            articles = Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id )
+            for a in articles:
+                print(a.id)
+                Article.query.filter_by(id=a.id).delete()
+            # delete users
+            User.query.filter_by(id=current_user.id ).delete()
+            db.session.commit()
+            # logout
+            logout_user()
+            return redirect(url_for('main.index'))
+        
+    
 # reading an article
 # there the Author of the ARticle can set publishing relationship
 # the journal editor can confirm this on the Journal page
@@ -225,6 +264,7 @@ def reader(article_id):
 @login_required
 def edit_profile():
     form = EditProfileForm(current_user.username)
+    deleteform = DeleteProfileForm()
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
@@ -235,7 +275,7 @@ def edit_profile():
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
     return render_template('edit_profile.html', title='Edit Profile',
-                           form=form)
+                           form=form, deleteform=deleteform, userid=current_user.id)
 
 
 
