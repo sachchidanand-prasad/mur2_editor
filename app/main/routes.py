@@ -1,21 +1,30 @@
 """
 The RestAPI addresses
 """
-
+from datetime import datetime
+from flask import render_template, flash, redirect, url_for, request, g, \
+    jsonify, current_app
+from flask_login import current_user, login_required
 from flask import render_template, current_app
 # errors
 from flask import abort
-from app import app
 
+# the part of the applications
+from app.auth import bp
 # the databse types
-from app.models import User, Article, WriterRelationship
+from app.models import User, Article, WriterRelationship, Images
+# the db
+from app import db
+# forms
+from app.main.forms import SearchForm, UploadForm, photos, EditProfileForm
+from app.auth.email import send_password_reset_email
+# blueprint
+from app.main import bp
 
 # recordin last user logging
-import datetime
-from app.forms import SearchForm
 from flask import g
 from flask_babel import get_locale
-@app.before_request
+@bp.before_request
 def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.datetime.utcnow()
@@ -24,79 +33,21 @@ def before_request():
     g.locale = str(get_locale()) # for international languages
 
 # logo page
-@app.route('/')
+@bp.route('/' )
 def root():
     return render_template("root.html", title='Home Page')
 
-# login
-from flask import render_template, flash, redirect, url_for, request
-from werkzeug.urls import url_parse
-from app.forms import LoginForm
-from flask_login import current_user, login_user
-from app.models import User
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # if user is already login do not let to go to login 
-    if current_user.is_authenticated:
-        return redirect(url_for('user', username=current_user.username))
-    
-    form = LoginForm()
-    # test the input data
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
-            return redirect(url_for('login'))
-        login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        # if there is no next page redirect to index
-        if not next_page or url_parse(next_page).netloc != '':
-            next_page = url_for('index')
-        return redirect(next_page)
-    return render_template('login.html', title='Sign In', form=form)
-
-@app.route('/index')
+@bp.route('/index')
 def index():
-    return redirect(url_for('user', username=current_user.username))
-
-# logout
-from flask_login import logout_user
-@app.route('/logout')
-def logout():
-    logout_user()
-    return redirect(url_for('root'))
-
-# register
-from app import db
-from app.forms import RegistrationForm
-# import os
-@app.route('/register', methods=['GET', 'POST'])
-def register():
     if current_user.is_authenticated:
-        return redirect(url_for('user'))
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        # save data in the frontend
-        user = User(username=form.username.data, email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        # get the save user data 
-        user = User.query.filter_by(username=form.username.data).first_or_404()
-        
-        # create directory for the user for uploading data like images
-        # os.makedirs('/static/images/'+user.username)
-        
-        # finish
-        flash('Congratulations, you are now a registered user!')
-        
-        return redirect(url_for('login'))
-    return render_template('register.html', title='Register', form=form)
+        return redirect(url_for('main.user', username=current_user.username))
+    else:
+        return redirect( url_for('main.root') )
+
 
 # user home page
 from flask_login import login_required
-@app.route('/user/<username>')
+@bp.route('/user/<username>')
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
@@ -106,9 +57,8 @@ def user(username):
     return render_template('user.html', user=user, articles=articles)
 
 # markdown editor
-from app.models import Article
 from flask import Markup
-@app.route('/edit/<articleid>')
+@bp.route('/edit/<articleid>')
 @login_required
 def editor(articleid):
     # this is a hack as Javascript can access this 
@@ -132,7 +82,7 @@ def editor(articleid):
         # Article not in editing status we redirect to reading
         if article.status != 'editing':
             flash('You can not edit this article')
-            return redirect(url_for('reader', article_id=article.id) )
+            return redirect(url_for('main.reader', article_id=article.id) )
     
     wordpresslogin = False
     if 'mur2_wpc_accesstoken' in request.cookies:
@@ -148,7 +98,7 @@ def editor(articleid):
                           )
 
 # markdown editor without login
-@app.route('/editor', methods=['GET', 'POST'])
+@bp.route('/editor', methods=['GET', 'POST'])
 def free_editor():
     # this is a hack as Javascript can access this 
     mur2language = str(request.accept_languages).split(",")[0]
@@ -175,11 +125,11 @@ def free_editor():
 
 # save markdown for article
 from flask import Flask, jsonify
-from app import db
+
 # to make the html code from the markdown
 import markdown
 import markdown.extensions.fenced_code
-@app.route('/markdownsave', methods=['POST'])
+@bp.route('/markdownsave', methods=['POST'])
 @login_required
 def markdownsave():
     # read the data which was sent from the editor.js
@@ -264,51 +214,15 @@ def markdownsave():
 # there the Author of the ARticle can set publishing relationship
 # the journal editor can confirm this on the Journal page
 from flask import Markup
-@app.route('/reader/<article_id>')
+@bp.route('/reader/<article_id>')
 def reader(article_id):
     a = Article.query.filter_by(id=article_id).join( WriterRelationship ).join(User).add_columns(  Article.html, Article.title,  Article.abstract, Article.status, Article.id, (User.id).label("uid"), User.username, WriterRelationship.confirmed ).first_or_404()
     return render_template('read.html', article_content=Markup(a.html), 
                            title=a.title, author=a.username, article=a )
 
 
-# requesting reseting the password
-from app.forms import ResetPasswordRequestForm
-from app.email import send_password_reset_email
-@app.route('/reset_password_request', methods=['GET', 'POST'])
-def reset_password_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form = ResetPasswordRequestForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_password_reset_email(user)
-        flash('Check your email for the instructions to reset your password')
-        return redirect(url_for('login'))
-    return render_template('reset_password_request.html',
-                           title='Reset Password', form=form)
-
-from app.forms import ResetPasswordForm
-
-# reseting the password
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    user = User.verify_reset_password_token(token)
-    if not user:
-        return redirect(url_for('index'))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        user.set_password(form.password.data)
-        db.session.commit()
-        flash('Your password has been reset.')
-        return redirect(url_for('login'))
-    return render_template('reset_password.html', form=form)
-
 # editing the profile
-from app.forms import EditProfileForm
-@app.route('/edit_profile', methods=['GET', 'POST'])
+@bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
     form = EditProfileForm(current_user.username)
@@ -317,7 +231,7 @@ def edit_profile():
         current_user.about_me = form.about_me.data
         db.session.commit()
         flash('Your changes have been saved.')
-        return redirect(url_for('edit_profile'))
+        return redirect(url_for('main.edit_profile'))
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
@@ -325,17 +239,27 @@ def edit_profile():
                            form=form)
 
 
-@app.route('/search')
+from flask import g
+@bp.before_app_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.datetime.utcnow()
+        db.session.commit()
+        g.search_form = SearchForm()
+    g.locale = str(get_locale())
+
+
+@bp.route('/search')
 @login_required
 def search():
     if not g.search_form.validate():
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
     posts, total = Article.search(g.search_form.q.data, page,
                                current_app.config['ARTICLE_PER_PAGE'])
-    next_url = url_for('search', q=g.search_form.q.data, page=page + 1) \
+    next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
         if total > page * current_app.config['ARTICLE_PER_PAGE'] else None
-    prev_url = url_for('search', q=g.search_form.q.data, page=page - 1) \
+    prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
     return render_template('search.html', title='Search', posts=posts,
                            next_url=next_url, prev_url=prev_url)
@@ -399,7 +323,7 @@ def make_latex(mdtxt, title, abstract, language):
                                      '-o', dirname+'mur2.tex'])
             return dirname
     
-@app.route('/export_data', methods=['POST'])
+@bp.route('/export_data', methods=['POST'])
 def exportdata():
     if request.method == 'POST':
         destination = request.form['destination']
@@ -456,6 +380,7 @@ def exportdata():
             mdtxt = mdtxt.decode('utf-8')
             article_title = (request.form['article_title'])
             article_abstract = (request.form['article_abstract']) 
+            language = (request.form['language']) 
             
             dirname = make_latex(mdtxt, article_title, article_abstract, language)
 
@@ -470,12 +395,8 @@ def exportdata():
 # Upload files
 from flask_uploads import configure_uploads, patch_request_class
 # DB local DB to know what file for which user
-from app.models import Images
 import os
-from app.forms import UploadForm, photos
-# configuration the Flask-upload
-configure_uploads(app, photos)
-@app.route('/media', methods=['GET', 'POST'])
+@bp.route('/media', methods=['GET', 'POST'])
 @login_required
 def media():
     form = UploadForm()
@@ -488,6 +409,6 @@ def media():
         db.session.add(image)
         db.session.commit()
         
-        return redirect(url_for('media'))
+        return redirect(url_for('main.media'))
     user_files = Images.query.filter_by(user_id=current_user.id).all()
     return render_template('media.html', form=form, files=user_files)

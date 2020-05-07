@@ -1,0 +1,45 @@
+
+        <div id="mur2menu" class="menufont topmenu">
+            <div>
+                <a class="toolbar-button" href="{{ url_for('main.root') }}">{{ _("Home") }}</a>
+                {% if current_user.is_anonymous %}
+                <a  class="toolbar-button"  href="{{ url_for('auth.login') }}">{{ _("Login") }}</a>
+                {% else %}
+                <a href="{{ url_for('main.user', username=current_user.username) }}">{{ _("Profile") }}</a>
+                <a href="{{ url_for('main.media') }}">{{ _("Media") }}</a>                 
+                {% endif %}
+                <a class="toolbar-button" href="{{ url_for('main.free_editor') }}">{{ _("Editor") }}</a>
+                {% if not current_user.is_anonymous %}
+                <a href="{{ url_for('auth.logout') }}">{{ _("Logout") }}</a> 
+                {% endif %}
+            </div> <!-- left side of the mur2 menu -->
+            
+            <!-- right side of the mur2 menu -->
+            <div class="toolbar-button">
+                {% if g.search_form %}            
+                <div  style="display: inline-block"  ><form class="navbar-form navbar-left" method="get"
+                        action="{{ url_for('main.search') }}">
+                    <div class="form-group">
+                        {{ g.search_form.q(size=20, class='form-control',
+                            placeholder=g.search_form.q.label.text) }}
+                    </div>
+                </form>
+                </div>
+               {% endif %}
+                <div style="display: inline-block"  onclick='show_mainmenus("choicemenu")'>M</div>
+            </div>
+            
+        </div> <!-- mur2menu -->
+        <div id="msg" >
+        <!-- print msg -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+        <!-- end msg -->
+        </div>

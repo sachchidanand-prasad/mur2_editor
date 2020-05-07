@@ -1,1 +1,1 @@
-waitress-serve --port=8081 app:app
+waitress-serve --port=8081 --call app:create_app

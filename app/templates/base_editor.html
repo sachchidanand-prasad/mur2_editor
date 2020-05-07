@@ -13,21 +13,17 @@
         {% endif %}
         <!-- Google fonts -->
         <link href="https://fonts.googleapis.com/css?family=Cormorant+Garamond|Domine|Enriqueta|Frank+Ruhl+Libre:500|Josefin+Sans|Libre+Baskerville|Manuale&display=swap" rel="stylesheet"> 
+        <!-- style -->
+        <link rel="stylesheet" href="/static/css/mur2.css">
         <!-- Font awesome -->
         <script src="https://kit.fontawesome.com/73ba869ba8.js" crossorigin="anonymous"></script>
         <script src="/static/js/mur2.js"></script> <!-- general mur2 javascripts -->
-        <!-- style -->
-        <link rel="stylesheet" href="/static/css/mur2.css">
         {% block header %}{% endblock %}
     </head>
     <body class="result-as-html">
         {% include 'base_menu.html' %}
         <!-- content -->
-        <div class="main_content">
-             <div>
-             {% block content %}{% endblock %}
-            </div>
-             <div id="foot"> © 2020 μr² {{ _("editor") }} </div>
-        </div><!-- end content -->
+        {% block content %}{% endblock %}
+        <!-- end content -->
     </body>        
 </html>

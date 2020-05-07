@@ -9,12 +9,12 @@
                 {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
                 {% if user.last_seen %}<p>{{ _("Last seen on") }}: {{ user.last_seen }}</p>{% endif %}
                 {% if user == current_user %}
-                <p><a href="{{ url_for('edit_profile') }}">{{ _("Edit your profile") }}</a></p>
+                <p><a href="{{ url_for('main.edit_profile') }}">{{ _("Edit your profile") }}</a></p>
                 {% endif %}
         </div>
     </div>
     <!-- Article -->
-    <div class="control-item" ><a href="{{ url_for('editor', articleid=-1)  }}">{{ _("New Article") }}</a> </div>
+    <div class="control-item" ><a href="{{ url_for('main.editor', articleid=-1)  }}">{{ _("New Article") }}</a> </div>
     <div class="normalpadding">
     {% for articlei in articles %}
         {% include 'article.html' %}

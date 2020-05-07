@@ -6,7 +6,6 @@ version: 1.0.0
 from datetime import datetime
 from app import db
 from flask_login import UserMixin
-from app import app
 
 # import login from the __init__.py
 from app import login
