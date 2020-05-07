@@ -52,10 +52,11 @@ from flask_login import login_required
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
+    deleteform = DeleteProfileForm()
     page = request.args.get('page', 1, type=int)
     # we need to set up in the add_columns the data in the templates
     articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title,  Article.abstract, Article.status )
-    return render_template('user.html', user=user, articles=articles)
+    return render_template('user.html', user=user, articles=articles, deleteform=deleteform )
 
 # markdown editor
 from flask import Markup

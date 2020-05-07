@@ -6,5 +6,12 @@
                 {{ articlei.title}}: <b>{{ articlei.abstract }}</b>
                 </a>                
             </td>
+            <td>
+                <form action="{{ url_for('main.delete_object') }}" method="post">
+                    {{ deleteform.object_id(value=articlei.id ) }} {{ deleteform.object_type(value="article" ) }}
+                    <input class="fas fa-trash control-item" type="submit" name="{{ _("Delete article") }}" value="&#xf1f8;
+" >        
+                </form>
+            </td>
         </tr>
 </table>
