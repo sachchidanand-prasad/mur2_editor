@@ -188,9 +188,11 @@ class Article(SearchableMixin, db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     # Wordpresscom id of the post after publishing
     wpcom_id = db.Column(db.Integer, index=False)
+    # Wordpresscom address where the things was published
+    wpcom_address = db.Column(db.String(140), index=False)
 
     # make searchable with Elasticsearch the markdown
-    __searchable__ = ['markdown', 'abstract', 'title']
+    __searchable__ = ['markdown']
     
     def __repr__(self):
         return '<Article {}>'.format(self.html)

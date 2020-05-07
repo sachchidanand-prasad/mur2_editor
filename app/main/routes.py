@@ -31,7 +31,8 @@ def before_request():
         db.session.commit()
         g.search_form = SearchForm() # for search
     g.locale = str(get_locale()) # for international languages
-
+    
+    
 # logo page
 @bp.route('/' )
 def root():
@@ -173,11 +174,9 @@ def markdownsave():
         w = WriterRelationship(article_id=a.id, 
                                writer_id= current_user.id)
         db.session.add(w)
-        db.session.commit()
-
-            
+        db.session.commit()    
         
-        
+        return jsonify({'result': "OK", 'id': a.id})
     else:
         a = Article.query.filter_by(id=article_id).first_or_404()
         
@@ -239,14 +238,6 @@ def edit_profile():
                            form=form)
 
 
-from flask import g
-@bp.before_app_request
-def before_request():
-    if current_user.is_authenticated:
-        current_user.last_seen = datetime.datetime.utcnow()
-        db.session.commit()
-        g.search_form = SearchForm()
-    g.locale = str(get_locale())
 
 
 @bp.route('/search')
@@ -255,13 +246,13 @@ def search():
     if not g.search_form.validate():
         return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
-    posts, total = Article.search(g.search_form.q.data, page,
+    articles, total = Article.search(g.search_form.q.data, page,
                                current_app.config['ARTICLE_PER_PAGE'])
     next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
         if total > page * current_app.config['ARTICLE_PER_PAGE'] else None
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
-    return render_template('search.html', title='Search', posts=posts,
+    return render_template('search.html', title='Search', articles=articles,
                            next_url=next_url, prev_url=prev_url)
 
 
