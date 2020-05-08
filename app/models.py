@@ -178,6 +178,8 @@ class Article(SearchableMixin, db.Model):
     __tablename__ = 'article'
     id = db.Column(db.Integer, primary_key=True)    
     title = db.Column(db.String(500), index=True)
+    # article language
+    language = db.Column(db.String(6))
     # article abstract
     abstract = db.Column(db.String(500))
     # the original markdown text

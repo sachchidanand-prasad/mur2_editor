@@ -206,7 +206,7 @@ def markdownsave():
             db.session.commit()
     
     # return a OK json 
-    flash(_("Your changes have been saved."))
+    flash(_l("Your changes have been saved."))
     return jsonify(result="OK")
     
 
@@ -264,8 +264,7 @@ def delete_object():
                 Images.query.filter_by(id=object_id).delete()
                 db.session.commit()
                 return redirect(url_for('main.media'))
-
-        
+   
     
 # reading an article
 # there the Author of the ARticle can set publishing relationship
@@ -380,12 +379,13 @@ def exportdata():
         if destination == 'wp':  
             article_id = (request.form['article_id'])
             wpcom_id = (request.form['wpcom_id'])
+            wpcom_address = (request.form['wpcom_address'])
 
             if article_id != "-2" :
                 a =  Article.query.filter_by(id=article_id).first_or_404()
                 # new article
                 if a.wpcom_id is None:           
-                    print("uj")                    
+                    a.wpcom_address = wpcom_address
                     a.wpcom_id = wpcom_id
                     db.session.commit()
             

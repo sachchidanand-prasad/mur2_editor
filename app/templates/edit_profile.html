@@ -5,20 +5,20 @@
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
-            {{ form.username.label }}<br>
+            {{ _("Username") }}<br>
             {{ form.username(size=32) }}<br>
             {% for error in form.username.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
         <p>
-            {{ form.about_me.label }}<br>
+            {{ _("About me") }}<br>
             {{ form.about_me(cols=50, rows=4) }}<br>
             {% for error in form.about_me.errors %}
             <span style="color: red;">[{{ error }}]</span>
             {% endfor %}
         </p>
-        <p>{{ form.submit() }}</p>
+        <p><input class="control-item" type="submit" name="{{ _("Save") }}" value="{{ _("Save") }}" ></p>
     </form>
     
     <form action="{{ url_for('main.delete_object') }}" method="post">
