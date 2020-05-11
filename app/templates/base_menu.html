@@ -1,6 +1,6 @@
 
         <div id="mur2menu" class="menufont topmenu">
-            <div>
+            <div  id="topmenu-left">
                 <a class="toolbar-button" href="{{ url_for('main.root') }}">{{ _("Home") }}</a>
                 {% if current_user.is_anonymous %}
                 <a  class="toolbar-button"  href="{{ url_for('auth.login') }}">{{ _("Login") }}</a>
@@ -15,7 +15,7 @@
             </div> <!-- left side of the mur2 menu -->
             
             <!-- right side of the mur2 menu -->
-            <div class="toolbar-button">
+            <div id="topmenu-right" class="toolbar-button">
                 {% if g.search_form %}            
                 <div  style="display: inline-block"  ><form class="navbar-form navbar-left" method="get"
                         action="{{ url_for('main.search') }}">

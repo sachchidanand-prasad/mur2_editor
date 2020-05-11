@@ -127,6 +127,10 @@ def free_editor():
                            wordpresslogin = wordpresslogin
                           )
 
+# test for different tmp solutions
+@bp.route('/test', methods=['GET', 'POST'])
+def test():
+    return render_template('test.html');
 
 # save markdown for article
 from flask import Flask, jsonify
@@ -153,7 +157,7 @@ def markdownsave():
     
     # save the data 
     #   new Article
-    if article_id == -1:
+    if article_id <= -1:
         # check the Article do not exist
         a = Article.query.filter_by(title=article_title).filter_by(abstract=article_abstract).join(WriterRelationship).filter(WriterRelationship.writer_id == current_user.id).first()
         if a is not None:
