@@ -94,10 +94,19 @@ def editor(articleid):
         wordpresslogin = True
     
     return render_template('editor.html', 
-                           article_markdown=Markup(article.markdown.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")),
-                           article_title = Markup(article.title.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")),
-                           article_abstract=Markup(article.abstract.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")), 
-                           article_id = articleid, 
+                           article_markdown=Markup(article.markdown
+                                                   .encode('unicode_escape').decode('utf-8')
+                                                   .replace("'", "\\\'")
+                                                   .replace('<', '&lt;')  ),
+                           article_title = Markup(article.title
+                                                  .encode('unicode_escape').decode('utf-8')
+                                                  .replace("'", "\\\'")
+                                                  .replace('<', '&lt;')),
+                           article_abstract=Markup(article.abstract
+                                                   .encode('unicode_escape').decode('utf-8')
+                                                   .replace("'", "\\\'")
+                                                   .replace('<', '&lt;')), 
+                           article_id = str(articleid), 
                            language=mur2language,
                            wordpresslogin = wordpresslogin
                           )
@@ -119,10 +128,16 @@ def free_editor():
         
 
     return render_template('editor.html', 
-                           article_markdown=Markup(demo.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")),
-                           article_title = Markup(article.title.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")),
-                           article_abstract=Markup(article.abstract.encode('unicode_escape').decode('utf-8').replace("'", "\\\'")), 
-                           article_id = -2, 
+                           article_markdown=Markup(demo.encode('unicode_escape').decode('utf-8')
+                                                   .replace("'", "\\\'")
+                                                  .replace('<', '&lt;')),
+                           article_title = Markup(article.title.encode('unicode_escape').decode('utf-8')
+                                                  .replace("'", "\\\'")
+                                                 .replace('<', '&lt;')),
+                           article_abstract=Markup(article.abstract.encode('unicode_escape').decode('utf-8')
+                                                   .replace("'", "\\\'")
+                                                  .replace('<', '&lt;')), 
+                           article_id = str(-2), 
                            language=mur2language,
                            wordpresslogin = wordpresslogin
                           )

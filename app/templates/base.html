@@ -21,13 +21,24 @@
         {% block header %}{% endblock %}
     </head>
     <body class="result-as-html">
-        {% include 'base_menu.html' %}
         <!-- content -->
-        <div class="main_content">
-             <div>
-             {% block content %}{% endblock %}
+        <div id="horizontal_box">
+        {% include 'base_menu.html' %}
+            <div id="msg" >
+                <!-- print msg -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                    <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+                <!-- end msg -->
             </div>
-             <div id="foot"> © 2020 μr² {{ _("editor") }} </div>
-        </div><!-- end content -->
+            {% block content %}{% endblock %}
+            <div id="foot"> © 2020 μr² {{ _("editor") }} </div>
+        </div><!-- horizontal_box -->
     </body>        
 </html>

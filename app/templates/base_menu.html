@@ -1,5 +1,5 @@
 
-        <div id="mur2menu" class="menufont topmenu">
+         <div id="mur2menu" class="menufont topmenu">
             <div  id="topmenu-left">
                 <a class="toolbar-button" href="{{ url_for('main.root') }}">{{ _("Home") }}</a>
                 {% if current_user.is_anonymous %}
@@ -26,20 +26,9 @@
                 </form>
                 </div>
                {% endif %}
-                <div style="display: inline-block"  onclick='show_mainmenus("choicemenu")'>M</div>
-            </div>
-            
+                <!-- show editor toolbar -->
+                 <input class="choice_menu" id="id_choicemenu" type="radio" name="source_type" >
+                 <label class="control-item" for="id_choicemenu" title={{ _("Close Menu") }} >M</label>
+            </div>            
         </div> <!-- mur2menu -->
-        <div id="msg" >
-        <!-- print msg -->
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endwith %}
-        <!-- end msg -->
-        </div>
+       
