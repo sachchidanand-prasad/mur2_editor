@@ -323,6 +323,7 @@ def search():
     if not g.search_form.validate():
         return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
+    deleteform = DeleteProfileForm()
     articles, total = Article.search(g.search_form.q.data, page,
                                current_app.config['ARTICLE_PER_PAGE'])
     next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
@@ -330,7 +331,7 @@ def search():
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
     return render_template('search.html', title='Search', articles=articles,
-                           next_url=next_url, prev_url=prev_url)
+                           next_url=next_url, deleteform=deleteform, prev_url=prev_url)
 
 
 # export the data to other formats
