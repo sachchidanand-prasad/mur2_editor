@@ -1,7 +1,7 @@
 """
 The RestAPI addresses
 """
-from datetime import datetime
+from datetime import datetime,timezone
 from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app
 from flask_login import current_user, login_required, logout_user
@@ -23,6 +23,8 @@ from app.auth.email import send_password_reset_email
 from app.main import bp
 # delete directory
 import shutil
+
+mobils = ["Android", "webOS", "iPhone", "iPad", "iPod", "BlackBerry", "IEMobile", "Opera Mini", "Mobile", "mobile", "CriOS"]
 
 # recordin last user logging
 from flask import g
@@ -93,6 +95,16 @@ def editor(articleid):
     if 'mur2_wpc_accesstoken' in request.cookies:
         wordpresslogin = True
     
+    # distinct between desktop and mobil users
+    desktop = True
+    useragent = request.headers.get('User-Agent')    
+    if any(phone  in useragent.lower() for phone in mobils):
+        desktop = False
+        
+    timestamp = 0
+    if article.timestamp is not None:
+        article.timestamp.replace(tzinfo=timezone.utc).timestamp()
+        
     return render_template('editor.html', 
                            article_markdown=Markup(article.markdown
                                                    .encode('unicode_escape').decode('utf-8')
@@ -108,7 +120,9 @@ def editor(articleid):
                                                    .replace('<', '&lt;')), 
                            article_id = str(articleid), 
                            language=mur2language,
-                           wordpresslogin = wordpresslogin
+                           wordpresslogin = wordpresslogin,
+                           desktop=desktop,
+                           articleTimestamp = timestamp
                           )
 
 # markdown editor without login
@@ -126,7 +140,13 @@ def free_editor():
     if 'mur2_wpc_accesstoken' in request.cookies:
         wordpresslogin = True
         
-
+    # distinct between desktop and mobil users
+    desktop = True
+    useragent = request.headers.get('User-Agent')   
+    print(useragent);
+    if any(phone  in useragent.lower() for phone in mobils):
+        desktop = False
+    
     return render_template('editor.html', 
                            article_markdown=Markup(demo.encode('unicode_escape').decode('utf-8')
                                                    .replace("'", "\\\'")
@@ -139,7 +159,9 @@ def free_editor():
                                                   .replace('<', '&lt;')), 
                            article_id = str(-2), 
                            language=mur2language,
-                           wordpresslogin = wordpresslogin
+                           wordpresslogin = wordpresslogin,
+                           desktop=desktop,
+                           articleTimestamp = 0
                           )
 
 # test for different tmp solutions
