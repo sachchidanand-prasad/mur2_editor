@@ -1,21 +1,6 @@
 
          <div id="mur2menu" class="menufont topmenu">
             <div  id="topmenu-left">
-                <a class="toolbar-button" href="{{ url_for('main.root') }}">{{ _("Home") }}</a>
-                {% if current_user.is_anonymous %}
-                <a  class="toolbar-button"  href="{{ url_for('auth.login') }}">{{ _("Sign In") }}</a>
-                {% else %}
-                <a href="{{ url_for('main.user', username=current_user.username) }}">{{ _("Profile") }}</a>
-                <a href="{{ url_for('main.media') }}">{{ _("Media") }}</a>                 
-                {% endif %}
-                <a class="toolbar-button" href="{{ url_for('main.free_editor') }}">{{ _("Editor") }}</a>
-                {% if not current_user.is_anonymous %}
-                <a href="{{ url_for('auth.logout') }}">{{ _("Sign out") }}</a> 
-                {% endif %}
-            </div> <!-- left side of the mur2 menu -->
-            
-            <!-- right side of the mur2 menu -->
-            <div id="topmenu-right" class="toolbar-button">
                 {% if g.search_form %}            
                 <div  style="display: inline-block"  ><form class="navbar-form navbar-left" method="get"
                         action="{{ url_for('main.search') }}">
@@ -26,6 +11,22 @@
                 </form>
                 </div>
                {% endif %}
+                
+            </div> <!-- left side of the mur2 menu -->
+            
+            <!-- right side of the mur2 menu -->
+            <div id="topmenu-right" class="toolbar-button">
+                <a class="toolbar-button control-item" href="{{ url_for('main.root') }}">{{ _("Home") }}</a>
+                {% if current_user.is_anonymous %}
+                <a  class="toolbar-button control-item"  href="{{ url_for('auth.login') }}">{{ _("Sign In") }}</a>
+                {% else %}
+                <a class="toolbar-button control-item" href="{{ url_for('main.user', username=current_user.username) }}">{{ _("Profile") }}</a>
+                <a class="toolbar-button control-item" href="{{ url_for('main.media') }}">{{ _("Media") }}</a>                 
+                {% endif %}
+                <a class="toolbar-button control-item" href="{{ url_for('main.free_editor') }}">{{ _("Editor") }}</a>
+                {% if not current_user.is_anonymous %}
+                <a class="toolbar-button control-item" href="{{ url_for('auth.logout') }}">{{ _("Sign out") }}</a> 
+                {% endif %}                
                 <!-- show editor toolbar -->
                  <input class="choice_menu control-input" id="id_choicemenu" type="radio" name="source_type" >
                  <label class="control-item" for="id_choicemenu" title={{ _("Close Menu") }} >M</label>
