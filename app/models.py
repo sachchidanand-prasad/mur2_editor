@@ -194,6 +194,10 @@ class Article(SearchableMixin, db.Model):
     wpcom_id = db.Column(db.Integer, index=False)
     # Wordpresscom address where the things was published
     wpcom_address = db.Column(db.String(140), index=False)
+    # Wordpresscom id of the post after publishing
+    medium_id = db.Column(db.String(140), index=False)
+    # Wordpresscom address where the things was published
+    medium_address = db.Column(db.String(140), index=False)
 
     # make searchable with Elasticsearch the markdown
     __searchable__ = ['markdown']

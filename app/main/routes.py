@@ -139,6 +139,9 @@ def free_editor():
     wordpresslogin = False
     if 'mur2_wpc_accesstoken' in request.cookies:
         wordpresslogin = True
+    mediumlogin = False
+    if 'mur2_medium_accesstoken' in request.cookies:
+        mediumlogin = True
         
     # distinct between desktop and mobil users
     desktop = True
@@ -160,6 +163,7 @@ def free_editor():
                            article_id = str(-2), 
                            language=mur2language,
                            wordpresslogin = wordpresslogin,
+                           mediumlogin = mediumlogin,
                            desktop=desktop,
                            articleTimestamp = 0
                           )
@@ -385,8 +389,8 @@ def  make_pandoc_md(mdtxt):
             return mdtxt
 def make_latex(mdtxt, title, abstract, language):
             mdtxt = make_pandoc_md(mdtxt)
-            title = make_pandoc_md(title)
-            abstract = make_pandoc_md(abstract)
+            title = title
+            abstract = abstract
     
             # save to file
             #  # generate random string for dir
@@ -398,13 +402,14 @@ def make_latex(mdtxt, title, abstract, language):
             file.write(mdtxt)
             file.close()
             
+            print(title)
 
             # make latex
             # '--filter',  'pandoc-xnos', # https://github.com/tomduck/pandoc-eqnos 
             result = run_os_command(['/usr/bin/pandoc', 
                                      mdname, 
-                                     '-M', 'title='+title,
-                                     '-M', 'abstract='+abstract,
+                                     '-M', 'title='+title.replace("$$", "$")+'',
+                                     '-M', 'abstract='+abstract+"",
                                      '-f', 'markdown', 
                                      '-t',  'latex', 
                                      '-V', 'lang='+language,
@@ -414,6 +419,7 @@ def make_latex(mdtxt, title, abstract, language):
             return dirname
     
 @bp.route('/export_data', methods=['POST'])
+@login_required
 def exportdata():
     if request.method == 'POST':
         destination = request.form['destination']
@@ -423,14 +429,52 @@ def exportdata():
             wpcom_id = (request.form['wpcom_id'])
             wpcom_address = (request.form['wpcom_address'])
 
-            if article_id != "-2" :
+            if int(article_id) > 0 :
                 a =  Article.query.filter_by(id=article_id).first_or_404()
                 # new article
                 if a.wpcom_id is None:           
                     a.wpcom_address = wpcom_address
                     a.wpcom_id = wpcom_id
                     db.session.commit()
+        elif destination == 'medium': 
+            article_id = (request.form['article_id'])
+            # publish on Medium
+            acceskey = (request.form['acceskey'])
+            # get the user id
+            headers = {"Authorization": "Bearer "+acceskey, 
+                       "Content-Type": "application/json", 
+                       "Accept": "application/json",
+                       "Accept-Charset": "utf-8"}
+                
+            x = requests.get('https://api.medium.com/v1/me', headers=headers).json()
             
+            
+            
+            # post
+            content = (request.form['article_content']).replace("https://tex.s2cms.ru/svg", "https://tex.s2cms.ru/png")
+            postdata = { "title": (request.form['article_title']),
+                        "contentFormat": "html",
+                        "content": content,
+                        "publishStatus": "draft"}
+            post = requests.post('https://api.medium.com/v1/users/'+x['data']['id']+'/posts', json=postdata, headers=headers )
+            
+            if post.status_code == 201 :
+                post = post.json()
+                # save on Mur2 system
+                if int(article_id) > 0 :
+                    a =  Article.query.filter_by(id=article_id).first_or_404()
+                    # new article
+                    if a.medium_id is None:           
+                        a.medium_address = post['data']['url']
+                        a.medium_id = post['data']['id']
+                        db.session.commit()
+                
+               
+                return jsonify({"result":"OK", "link": post['data']['url']})  
+            else:
+                return post.text, post.status_code
+            
+                        
         elif destination == 'pdf': 
             # read the data which was sent from the editor.js
             mdtxt = request.files['mdfile'].read()
@@ -477,6 +521,34 @@ def exportdata():
             #   do in cron ass it is troublesome to be sure it was transfared before deleteing
             
             return send_file(os.path.join(dirname, 'mur2.tex'))
+        elif destination == "epub":
+            # read the data which was sent from the editor.js
+            mdtxt = request.files['mdfile'].read()
+            # some encoding 
+            mdtxt = mdtxt.decode('utf-8')
+            article_title = (request.form['article_title'])
+            article_abstract = (request.form['article_abstract']) 
+            endnotetext = (request.form['endnotetext']) 
+            language = (request.form['language']) 
+
+            # dirname = make_latex(mdtxt, article_title, article_abstract)
+            mdtxt = make_pandoc_md(mdtxt)
+            article_title = make_pandoc_md(article_title)
+            article_abstract = make_pandoc_md(article_abstract)
+            
+            dirname = make_latex(mdtxt, article_title, article_abstract, language)
+            # make pdf
+            result = run_os_command(['/usr/bin/pandoc', 
+                                     dirname + 'mur2.tex', 
+                                     '-M', 'title='+article_title+'',
+                                     '-M', 'abstract='+article_abstract+'',
+                                     '-f', 'latex', 
+                                     '-V',  'CJKmainfont=Noto Serif CJK SC', 
+                                     '-V', 'lang='+language,
+                                     '-s', 
+                                     '-o', dirname + 'mur2.epub'])
+            return send_file(os.path.join(dirname, 'mur2.epub'))
+            
             
     # return a OK json 
     return jsonify(result="OK")            
