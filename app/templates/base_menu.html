@@ -23,7 +23,7 @@
                 <a class="toolbar-button control-item" href="{{ url_for('main.user', username=current_user.username) }}">{{ _("Profile") }}</a>
                 <a class="toolbar-button control-item" href="{{ url_for('main.media') }}">{{ _("Media") }}</a>                 
                 {% endif %}
-                <a class="toolbar-button control-item" href="{{ url_for('main.free_editor') }}">{{ _("Editor") }}</a>
+                <a class="toolbar-button control-item " href="{{ url_for('main.free_editor') }}">{{ _("Editor") }}</a>
                 {% if not current_user.is_anonymous %}
                 <a class="toolbar-button control-item" href="{{ url_for('auth.logout') }}">{{ _("Sign out") }}</a> 
                 {% endif %}                

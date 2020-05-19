@@ -94,6 +94,9 @@ def editor(articleid):
     wordpresslogin = False
     if 'mur2_wpc_accesstoken' in request.cookies:
         wordpresslogin = True
+    mediumlogin = False
+    if 'mur2_medium_accesstoken' in request.cookies:
+        mediumlogin = True
     
     # distinct between desktop and mobil users
     desktop = True
@@ -121,6 +124,7 @@ def editor(articleid):
                            article_id = str(articleid), 
                            language=mur2language,
                            wordpresslogin = wordpresslogin,
+                           mediumlogin = mediumlogin,
                            desktop=desktop,
                            articleTimestamp = timestamp
                           )
@@ -387,6 +391,9 @@ def  make_pandoc_md(mdtxt):
             
             
             return mdtxt
+def make_tmpdirname():
+    letters = string.ascii_letters
+    return '/tmp/mur2_export_'+''.join(random.choice(letters) for i in range(16))+'/'
 def make_latex(mdtxt, title, abstract, language):
             mdtxt = make_pandoc_md(mdtxt)
             title = title
@@ -394,8 +401,7 @@ def make_latex(mdtxt, title, abstract, language):
     
             # save to file
             #  # generate random string for dir
-            letters = string.ascii_letters
-            dirname = '/tmp/mur2_export_'+''.join(random.choice(letters) for i in range(16))+'/'
+            dirname = make_tmpdirname()
             os.mkdir(dirname)
             mdname = dirname+'pdf.md'
             file = open(mdname, 'w')
@@ -405,19 +411,39 @@ def make_latex(mdtxt, title, abstract, language):
             print(title)
 
             # make latex
-            # '--filter',  'pandoc-xnos', # https://github.com/tomduck/pandoc-eqnos 
+            # first make the setting files
+            with open(dirname+'settings.txt', 'w') as file:
+                file.write('---\ntitle: '+title.replace("$$", "$")+
+                           "\nabstract: "+abstract.replace("$$", "$")+
+                          "\nlang: " + language +
+                          "\n---")
+               
             result = run_os_command(['/usr/bin/pandoc', 
+                                     dirname+'settings.txt', 
                                      mdname, 
-                                     '-M', 'title='+title.replace("$$", "$")+'',
-                                     '-M', 'abstract='+abstract+"",
                                      '-f', 'markdown', 
                                      '-t',  'latex', 
-                                     '-V', 'lang='+language,
                                      '-V',  'CJKmainfont=Noto Serif CJK SC',
                                      '-s',                                      
                                      '-o', dirname+'mur2.tex'])
+
             return dirname
-    
+
+@bp.route('/medium_connect', methods=['POST'])
+@login_required
+def medium_connect():        
+    acceskey = request.form['acceskey']      
+    headers = {"Authorization": "Bearer "+acceskey, 
+               "Content-Type": "application/json", 
+               "Accept": "application/json",
+               "Accept-Charset": "utf-8"}
+    x = requests.get('https://api.medium.com/v1/me', headers=headers)
+    if x.status_code == 200 :        
+        x = x.json()
+        return jsonify({"result":"OK", "link": x['data']['id']})  
+    else:
+        return x.text, x.status_code
+        
 @bp.route('/export_data', methods=['POST'])
 @login_required
 def exportdata():
@@ -446,8 +472,11 @@ def exportdata():
                        "Accept": "application/json",
                        "Accept-Charset": "utf-8"}
                 
-            x = requests.get('https://api.medium.com/v1/me', headers=headers).json()
-            
+            x = requests.get('https://api.medium.com/v1/me', headers=headers)
+            if x.status_code == 200 :
+                x = x.json()
+            else:
+                return x.text, x.status_code
             
             
             # post
@@ -495,11 +524,8 @@ def exportdata():
             # make pdf
             result = run_os_command(['/usr/bin/pandoc', 
                                      dirname + 'mur2.tex', 
-                                     '-M', 'title='+article_title+'',
-                                     '-M', 'abstract='+article_abstract+'',
                                      '-f', 'latex', 
                                      '-V',  'CJKmainfont=Noto Serif CJK SC', 
-                                     '-V', 'lang='+language,
                                      '--pdf-engine=xelatex',
                                      '-s', 
                                      '-o', dirname + 'mur2.pdf'])
@@ -536,17 +562,34 @@ def exportdata():
             article_title = make_pandoc_md(article_title)
             article_abstract = make_pandoc_md(article_abstract)
             
-            dirname = make_latex(mdtxt, article_title, article_abstract, language)
-            # make pdf
-            result = run_os_command(['/usr/bin/pandoc', 
-                                     dirname + 'mur2.tex', 
-                                     '-M', 'title='+article_title+'',
-                                     '-M', 'abstract='+article_abstract+'',
-                                     '-f', 'latex', 
+            
+            # make epub
+            dirname = make_tmpdirname()
+            os.mkdir(dirname)
+            # save the body text
+            mdname = dirname+'epbub.md'
+            file = open(mdname, 'w')
+            file.write(mdtxt)
+            file.close()
+            # save the settings
+            with open(dirname+'settings.txt', 'w') as file:
+                file.write('---\ntitle: '+article_title.replace("$$", "$")+
+                          "\nlang: " + language +
+                          "\n---")
+            # save the abstract 
+            with open(dirname+'abstract.txt', 'w') as file:
+                file.write("# {epub:type=abstract}\n"+article_abstract)
+            # generate the epub
+            result = run_os_command(['/usr/bin/pandoc',
+                                     dirname+'settings.txt',
+                                     dirname+'abstract.txt',
+                                     mdname,
+                                     '-f', 'markdown', 
                                      '-V',  'CJKmainfont=Noto Serif CJK SC', 
-                                     '-V', 'lang='+language,
                                      '-s', 
-                                     '-o', dirname + 'mur2.epub'])
+                                     '-o', dirname + 'mur2.epub'])    
+
+            
             return send_file(os.path.join(dirname, 'mur2.epub'))
             
             
