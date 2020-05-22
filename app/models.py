@@ -198,6 +198,9 @@ class Article(SearchableMixin, db.Model):
     medium_id = db.Column(db.String(140), index=False)
     # Wordpresscom address where the things was published
     medium_address = db.Column(db.String(140), index=False)
+    # abstract and title html
+    abstracthtml = db.Column(db.String(1200))
+    titlehtml = db.Column(db.String(120))
 
     # make searchable with Elasticsearch the markdown
     __searchable__ = ['markdown']

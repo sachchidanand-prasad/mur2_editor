@@ -60,7 +60,7 @@ def user(username):
     deleteform = DeleteProfileForm()
     page = request.args.get('page', 1, type=int)
     # we need to set up in the add_columns the data in the templates
-    articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title,  Article.abstract, Article.status )
+    articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title, Article.abstracthtml, Article.titlehtml, Article.abstract, Article.status )
     return render_template('user.html', user=user, articles=articles, deleteform=deleteform )
 
 # markdown editor
@@ -198,19 +198,27 @@ def markdownsave():
     article_id = int((request.form['article_id']))        
     article_title = (request.form['article_title'])
     article_abstract = (request.form['article_abstract'])  
+    article_title_html = (request.form['article_title_html'])
+    article_abstract_html = (request.form['article_abstract_html']) 
+    print(article_title_html)
+    print(article_abstract_html)
     
     
     # save the data 
     #   new Article
     if article_id <= -1:
         # check the Article do not exist
-        a = Article.query.filter_by(title=article_title).filter_by(abstract=article_abstract).join(WriterRelationship).filter(WriterRelationship.writer_id == current_user.id).first()
+        a = Article.query.filter_by(title=article_title).join(WriterRelationship).filter(WriterRelationship.writer_id == current_user.id).first()
         if a is not None:
             # we should return something more meaningfull ???
             abort(401)
            
         # create new Artilce
-        a = Article(title=article_title, abstract=article_abstract, markdown=markdowntxt, html=htmltxt, status="editing")        
+        a = Article(title=article_title, abstract=article_abstract, 
+                    markdown=markdowntxt, html=htmltxt, 
+                    abstracthtml=article_abstract_html,
+                    titlehtml=article_title_html,
+                    status="editing")        
         db.session.add(a)
         # get the new object id
         db.session.flush()         
@@ -249,6 +257,12 @@ def markdownsave():
         if a.markdown != markdowntxt:
             change = True
             a.markdown = markdowntxt
+        if a.titlehtml != article_title_html:
+            change = True
+            a.titlehtml = article_title_html
+        if a.abstracthtml != article_abstract_html:
+            change = True
+            a.abstracthtml = article_abstract_html
 
         # if anything changed
         if change:
@@ -407,15 +421,15 @@ def make_latex(mdtxt, title, abstract, language):
             file = open(mdname, 'w')
             file.write(mdtxt)
             file.close()
-            
-            print(title)
 
             # make latex
             # first make the setting files
             with open(dirname+'settings.txt', 'w') as file:
-                file.write('---\ntitle: '+title.replace("$$", "$")+
-                           "\nabstract: "+abstract.replace("$$", "$")+
+                file.write('---\ntitle: \''+title.replace("$$", "$")+"'"+
+                           "\nabstract: '"+abstract.replace("$$", "$")+"'"+
                           "\nlang: " + language +
+                          "\ncsquotes: true" +
+                          "\nheader-includes:\n    - \\usepackage[autostyle=true]{csquotes}" +
                           "\n---")
                
             result = run_os_command(['/usr/bin/pandoc', 
@@ -445,7 +459,6 @@ def medium_connect():
         return x.text, x.status_code
         
 @bp.route('/export_data', methods=['POST'])
-@login_required
 def exportdata():
     if request.method == 'POST':
         destination = request.form['destination']
@@ -523,12 +536,15 @@ def exportdata():
             
             # make pdf
             result = run_os_command(['/usr/bin/pandoc', 
-                                     dirname + 'mur2.tex', 
-                                     '-f', 'latex', 
-                                     '-V',  'CJKmainfont=Noto Serif CJK SC', 
+                                     dirname+'settings.txt', 
+                                     dirname+'pdf.md', 
+                                     '-f', 'markdown', 
+                                     '-t',  'pdf', 
                                      '--pdf-engine=xelatex',
-                                     '-s', 
-                                     '-o', dirname + 'mur2.pdf'])
+                                     '-V',  'CJKmainfont=Noto Serif CJK SC',
+                                     '-s',                                      
+                                     '-o', dirname+'mur2.pdf'])
+            
             return send_file(os.path.join(dirname, 'mur2.pdf'))
 
             
@@ -575,6 +591,8 @@ def exportdata():
             with open(dirname+'settings.txt', 'w') as file:
                 file.write('---\ntitle: '+article_title.replace("$$", "$")+
                           "\nlang: " + language +
+                          "\ncsquotes: true" +
+                          "\nheader-includes:\n    - \\usepackage[autostyle=true]{csquotes}" +
                           "\n---")
             # save the abstract 
             with open(dirname+'abstract.txt', 'w') as file:
@@ -588,6 +606,7 @@ def exportdata():
                                      '-V',  'CJKmainfont=Noto Serif CJK SC', 
                                      '-s', 
                                      '-o', dirname + 'mur2.epub'])    
+            
 
             
             return send_file(os.path.join(dirname, 'mur2.epub'))

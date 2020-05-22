@@ -29,13 +29,22 @@
         <script src="https://kit.fontawesome.com/73ba869ba8.js" crossorigin="anonymous"></script>
         <script src="/static/js/mur2.js"></script> <!-- general mur2 javascripts -->
         <!-- style -->
-        <link rel="stylesheet" href="/static/css/mur2.css">
+        <link rel="stylesheet" href="/static/css/mur2_new.css">
         {% block header %}{% endblock %}
     </head>
     <body class="result-as-html">
         <!-- content -->
         <div id="horizontal_box">
-        {% include 'base_menu.html' %}
+            <div id="side_menu" class="menufont hide tran1">
+                <div id="side_top">
+                    {% include 'base_menu_new.html' %}
+                </div>
+                <div id="foot"   > 
+                    <a href="https://mur2.co.uk" class="control-item">© 2020 μr²</a>
+                </div>
+            </div>
+            <div class="menufont topmenu">
+            </div>
             <div id="msg" >
                 <!-- print msg -->
                 {% with messages = get_flashed_messages() %}
@@ -51,8 +60,7 @@
             </div>
             <div id="maintext">
             {% block content %}{% endblock %}
-            </div>
-            <div id="foot"> © 2020 μr² {{ _("editor") }} </div>
+            </div>            
         </div><!-- horizontal_box -->
     </body>        
 </html>

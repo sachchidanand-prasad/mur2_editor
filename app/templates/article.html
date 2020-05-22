@@ -2,12 +2,11 @@
         <tr valign="top">
             <td>
                 <!-- it still editing status so we will open the editor -->
-                <a href="{{ url_for('main.editor', articleid=articlei.id)  }}">
-                {{ articlei.title}}: <b>{{ articlei.abstract }}</b>
-                </a>                
+                <a class="control-item"  href="{{ url_for('main.editor', articleid=articlei.id)  }}">
+                    {{ articlei.titlehtml|safe}} </a> {{ articlei.abstracthtml|safe }}                               
             </td>
             <td>
-                <form action="{{ url_for('main.delete_object') }}" method="post">
+                <form class="control-item"  action="{{ url_for('main.delete_object') }}" method="post">
                     {{ deleteform.object_id(value=articlei.id ) }} {{ deleteform.object_type(value="article" ) }}
                     <input class="fas fa-trash control-item" type="submit" name="{{ _("Delete article") }}" value="&#xf1f8;
 " >        
