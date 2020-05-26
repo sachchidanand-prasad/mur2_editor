@@ -14,21 +14,23 @@
         <!-- Google fonts -->
         <link href="https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova&display=swap" rel="stylesheet"> 
         <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">       
-        <!-- Adobe fonts -->
-        <link rel="stylesheet" href="https://use.typekit.net/vri2wty.css">
+
         <!-- Font awesome -->
         <script src="https://kit.fontawesome.com/73ba869ba8.js" crossorigin="anonymous"></script>
         <script src="/static/js/mur2.js"></script> <!-- general mur2 javascripts -->
         <!-- style -->
-        <link rel="stylesheet" href="/static/css/mur2_new.css">
+        <link rel="stylesheet" href="/static/css/mur2.css">
+        <link rel="stylesheet" href="/static/css/mur2_front.css">
+        {% include 'language_selector.html' %}
+        
         {% block header %}{% endblock %}
     </head>
-    <body class="result-as-html">
+    <body class="result-as-html {{ language }}">
         <!-- content -->
         <div id="horizontal_box">
             <div id="side_menu" class="menufont hide tran1">
                 <div id="side_top">
-                    {% include 'base_menu_new.html' %}
+                    {% include 'base_menu.html' %}
                 </div>
                 <div id="foot"   > 
                     <a href="https://mur2.co.uk" class="control-item">© 2020 μr²</a>

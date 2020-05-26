@@ -36,6 +36,8 @@ def before_request():
         db.session.commit()
         g.search_form = SearchForm() # for search
     g.locale = str(get_locale()) # for international languages
+    print(g.locale)
+    
     
     
 # logo page
@@ -61,7 +63,7 @@ def user(username):
     page = request.args.get('page', 1, type=int)
     # we need to set up in the add_columns the data in the templates
     articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title, Article.abstracthtml, Article.titlehtml, Article.abstract, Article.status )
-    return render_template('user.html', user=user, articles=articles, deleteform=deleteform )
+    return render_template('user.html', language=g.locale, user=user, articles=articles, deleteform=deleteform )
 
 # reading an article
 # there the Author of the ARticle can set publishing relationship
@@ -71,9 +73,9 @@ from flask import Markup
 def reader(articleid):
     a = Article.query.filter_by(id=articleid).join( WriterRelationship ).join(User).add_columns(  Article.html, Article.title,  Article.abstract, Article.status, Article.abstracthtml, Article.titlehtml,  Article.id, (User.id).label("uid"), User.username).first_or_404()
     ownarticle = False
-    if a.uid == current_user.id :
+    if hasattr(current_user, 'id') and a.uid == current_user.id :
         ownarticle = True 
-    return render_template('read.html', article_content=Markup(a.html), 
+    return render_template('read.html', language=g.locale, article_content=Markup(a.html), 
                            author=a.username, article=a,  ownarticle = ownarticle)
 
 # markdown editor
@@ -81,8 +83,7 @@ from flask import Markup
 @bp.route('/edit/<articleid>')
 @login_required
 def editor(articleid):
-    # this is a hack as Javascript can access this 
-    mur2language = str(request.accept_languages).split(",")[0]
+    
     # the article
     article = Article(title="", abstract='', markdown='', html="")
     # if it is not a new article
@@ -135,7 +136,7 @@ def editor(articleid):
                                                    .replace("'", "\\\'")
                                                    .replace('<', '&lt;')), 
                            article_id = str(articleid), 
-                           language=mur2language,
+                           language=g.locale,
                            wordpresslogin = wordpresslogin,
                            mediumlogin = mediumlogin,
                            desktop=desktop,
@@ -145,8 +146,6 @@ def editor(articleid):
 # markdown editor without login
 @bp.route('/editor', methods=['GET', 'POST'])
 def free_editor():
-    # this is a hack as Javascript can access this 
-    mur2language = str(request.accept_languages).split(",")[0]
     # the article
     article = Article(title="", abstract='', markdown='', html="")
     # fix the article content to a demo text 
@@ -177,7 +176,7 @@ def free_editor():
                                                    .replace("'", "\\\'")
                                                   .replace('<', '&lt;')), 
                            article_id = str(-2), 
-                           language=mur2language,
+                           language=g.locale,
                            wordpresslogin = wordpresslogin,
                            mediumlogin = mediumlogin,
                            desktop=desktop,
@@ -354,7 +353,7 @@ def edit_profile():
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', title='Edit Profile',
+    return render_template('edit_profile.html', language=g.locale, title='Edit Profile',
                            form=form, deleteform=deleteform, userid=current_user.id)
 
 
@@ -373,7 +372,7 @@ def search():
         if total > page * current_app.config['ARTICLE_PER_PAGE'] else None
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
-    return render_template('search.html', title='Search', articles=articles,
+    return render_template('search.html', language=g.locale, title='Search', articles=articles,
                            next_url=next_url, deleteform=deleteform, prev_url=prev_url)
 
 
@@ -640,4 +639,4 @@ def media():
         
         return redirect(url_for('main.media'))
     user_files = Images.query.filter_by(user_id=current_user.id).all()
-    return render_template('media.html', form=form, files=user_files, deleteform=deleteform)
+    return render_template('media.html', language=g.locale, form=form, files=user_files, deleteform=deleteform)
