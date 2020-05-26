@@ -6,12 +6,12 @@
 
 {% block content %}
     <div id="article"> <!-- Article content -->
-        <h1 id="article_title">{{ article.title }}</h1>
-        <p id="article_abstract">{{ article.abstract }}</p>
+        <h1 id="article_title">{{ article.titlehtml|safe }}</h1>
+        <p id="article_abstract">{{ article.abstracthtml|safe }}</p>
         <div class="separator"></div>
     
         <div id="article_text">
-        {{ article_content }}
+        {{ article.html|safe }}
         </div>
     </div>
 

@@ -63,6 +63,19 @@ def user(username):
     articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title, Article.abstracthtml, Article.titlehtml, Article.abstract, Article.status )
     return render_template('user.html', user=user, articles=articles, deleteform=deleteform )
 
+# reading an article
+# there the Author of the ARticle can set publishing relationship
+# the journal editor can confirm this on the Journal page
+from flask import Markup
+@bp.route('/reader/<articleid>')
+def reader(articleid):
+    a = Article.query.filter_by(id=articleid).join( WriterRelationship ).join(User).add_columns(  Article.html, Article.title,  Article.abstract, Article.status, Article.abstracthtml, Article.titlehtml,  Article.id, (User.id).label("uid"), User.username).first_or_404()
+    ownarticle = False
+    if a.uid == current_user.id :
+        ownarticle = True 
+    return render_template('read.html', article_content=Markup(a.html), 
+                           author=a.username, article=a,  ownarticle = ownarticle)
+
 # markdown editor
 from flask import Markup
 @bp.route('/edit/<articleid>')
@@ -150,7 +163,6 @@ def free_editor():
     # distinct between desktop and mobil users
     desktop = True
     useragent = request.headers.get('User-Agent')   
-    print(useragent);
     if any(phone  in useragent.lower() for phone in mobils):
         desktop = False
     
@@ -200,8 +212,6 @@ def markdownsave():
     article_abstract = (request.form['article_abstract'])  
     article_title_html = (request.form['article_title_html'])
     article_abstract_html = (request.form['article_abstract_html']) 
-    print(article_title_html)
-    print(article_abstract_html)
     
     
     # save the data 
@@ -305,7 +315,6 @@ def delete_object():
             # delete Articles
             articles = Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id )
             for a in articles:
-                print(a.id)
                 Article.query.filter_by(id=a.id).delete()
             # delete users
             User.query.filter_by(id=current_user.id ).delete()
@@ -328,16 +337,6 @@ def delete_object():
                 db.session.commit()
                 return redirect(url_for('main.media'))
    
-    
-# reading an article
-# there the Author of the ARticle can set publishing relationship
-# the journal editor can confirm this on the Journal page
-from flask import Markup
-@bp.route('/reader/<article_id>')
-def reader(article_id):
-    a = Article.query.filter_by(id=article_id).join( WriterRelationship ).join(User).add_columns(  Article.html, Article.title,  Article.abstract, Article.status, Article.id, (User.id).label("uid"), User.username, WriterRelationship.confirmed ).first_or_404()
-    return render_template('read.html', article_content=Markup(a.html), 
-                           title=a.title, author=a.username, article=a )
 
 
 # editing the profile

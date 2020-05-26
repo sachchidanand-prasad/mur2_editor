@@ -11,6 +11,8 @@
                     <input class="fas fa-trash control-item" type="submit" name="{{ _("Delete article") }}" value="&#xf1f8;
 " >        
                 </form>
+                <a class="control-item fas fa-book-open"  href="{{ url_for('main.reader', articleid=articlei.id)  }}"></a> 
+                <a class="control-item far fa-edit"  href="{{ url_for('main.editor', articleid=articlei.id)  }}"></a> 
             </td>
         </tr>
 </table>
