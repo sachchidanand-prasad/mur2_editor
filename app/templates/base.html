@@ -26,9 +26,10 @@
         
         {% block header %}{% endblock %}
     </head>
-    <body class="result-as-html {{ language }}">
+    <body class="result-as-html {{ language }} {{ request.endpoint }}">
         <!-- content -->
         <div id="horizontal_box">
+            <input class="choice_menu control-input" id="id_side_menu" type="checkbox" name="source_type" >
             <div id="side_menu" class="menufont hide tran1">
                 <div id="side_top">
                     {% include 'base_menu.html' %}

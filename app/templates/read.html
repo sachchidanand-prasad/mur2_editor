@@ -7,6 +7,7 @@
 {% block content %}
     <div id="article_main"> <!-- Article content -->
         <h1 id="article_title">{{ article.titlehtml|safe }}</h1>
+        <div>{{ author }} – {{ timestamp }}</div>
         {{ article.abstracthtml|safe }}
         <div class="separator"></div>    
         <div id="article_text">
