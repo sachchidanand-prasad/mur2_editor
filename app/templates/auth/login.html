@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
+{% block menu %}
+{% endblock %}
+
 {% block content %}
-    <h1>Sign In</h1>
+    <h1>{{ _("Sign In") }}</h1>
     <form action="" method="post" novalidate>
         {{ form.hidden_tag() }}
         <p>

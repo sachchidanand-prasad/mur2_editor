@@ -15,7 +15,9 @@
                     <a class="toolbar-button control-item " title="{{ _('Media') }}" href="{{ url_for('main.media') }}">{{ _("Media") }}</a>
                     <a class="toolbar-button control-item "  title="{{ _('Sign out') }}" href="{{ url_for('auth.logout') }}">{{ _("Sign out") }}</a> 
                     {% else %}
+                        {% if request.endpoint != 'auth.login' %}
                     <a  class="toolbar-button control-item " title="{{ _('Sign In') }}" href="{{ url_for('auth.login') }}">{{ _("Sign In") }}</a>
+                        {% endif %}
                     {% endif %} 
                     
                     {% if not current_user.is_anonymous and g.search_form %}

@@ -11,13 +11,7 @@
         {% else %}
         <title>μr²</title>
         {% endif %}
-        <!-- Google fonts -->
-        <link href="https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet"> 
-        <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">      
-        <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"> 
 
-        <!-- Font awesome -->
-        <script src="https://kit.fontawesome.com/73ba869ba8.js" crossorigin="anonymous"></script>
         <script src="/static/js/mur2.js"></script> <!-- general mur2 javascripts -->
         <!-- style -->
         <link rel="stylesheet" href="/static/css/mur2.css">
@@ -33,6 +27,7 @@
             <div id="side_menu" class="menufont hide tran1">
                 <div id="side_top">
                     {% include 'base_menu.html' %}
+                    {% block menu %}{% endblock %}
                 </div>
                 <div id="foot"   > 
                     <a href="https://mur2.co.uk" class="control-item">© 2020 μr²</a>
