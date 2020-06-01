@@ -2,26 +2,35 @@
 
 {% block content %}
 
-    <div id="user_profil_overview" >
-        <div id="avator"><img src="{{ user.avatar(128) }}"></div>
-        <div id="profile_overview">
-                <h1>{{ user.username }}</h1>
-                {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
-                {% if user.last_seen %}<p>{{ _("Last seen on") }}: {{ user.last_seen }}</p>{% endif %}
-                {% if user == current_user %}
-                <p><a class="control-item"  href="{{ url_for('main.edit_profile') }}">{{ _("Edit your profile") }}</a></p>
-                {% endif %}
+    {% if user == current_user %}
+    <a href="{{ url_for('main.edit_profile') }}">
+        <div id="user_username">
+            {{ user.username }}
+        </div>
+    </a>
+    {% else %}
+    <div id="user_username">{{ user.username }}</div>
+    {% endif %}
+
+    <!-- Article -->
+    {% if user == current_user %}
+    <div class="user_articles">
+        <div class="usertitle">
+            <a href="{{ url_for('main.editor', articleid=-1)  }}">{{ _("New Article") }}</a>
         </div>
     </div>
-    <!-- Article -->
-    <div ><a class="control-item" href="{{ url_for('main.editor', articleid=-1)  }}">{{ _("New Article") }}</a> </div>
+    {% endif %}
+
     <div class="normalpadding">
     {% for articlei in articles %}
         {% include 'article.html' %}
     {% endfor %}                
     </div>
-    
 
-
+    <!-- fit username to box -->
+    <script src="/static/js/TextFit/textFit.min.js"></script> 
+    <script>
+        textFit(document.getElementById('user_username'), {minFontSize:10, maxFontSize: 164});
+    </script>
     
 {% endblock %}

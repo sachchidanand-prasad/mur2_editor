@@ -1,35 +1,18 @@
 
-<div id="user_articles">
-    <div id="article_info">
-        <div>{{ articlei.titlehtml|safe}}</div>
-        <div>{{ articlei.abstracthtml|safe }}</div>
-    </div>
-    <div id="article_action">
-        <form action="{{ url_for('main.delete_object') }}" method="post">
-                    {{ deleteform.object_id(value=articlei.id ) }} {{ deleteform.object_type(value="article" ) }}
-                    <input class="control-input" id="id_delete_article" type="submit" value="&#xf1f8;" >
-                    <label class="control-item fas fa-trash" for="id_delete_article" title="{{ _('Delete article') }}" ></label>
-        </form>
-        <a class="control-item fas fa-book-open"  href="{{ url_for('main.reader', articleid=articlei.id)  }}"></a> 
-        <a class="control-item far fa-edit"  href="{{ url_for('main.editor', articleid=articlei.id)  }}"></a>
-    </div>
-</div>
-
-<!--
-<table id="user_articles">
-        <tr valign="top">
-            <td>                
-                <a class="control-item"  href="{{ url_for('main.editor', articleid=articlei.id)  }}">
-                    {{ articlei.titlehtml|safe}} </a> {{ articlei.abstracthtml|safe }}                               
-            </td>
-            <td>
+<div class="user_articles">
+        <div class="usertitle"><a  href="{{ url_for('main.reader', articleid=articlei.id)  }}">{{ articlei.titlehtml|safe}}</a></div>
+        <div class="userabstract">
+            <div class="article_action">
+                {% if articlei.uid == current_user.id %}
                 <form action="{{ url_for('main.delete_object') }}" method="post">
                     {{ deleteform.object_id(value=articlei.id ) }} {{ deleteform.object_type(value="article" ) }}
                     <input class="control-input" id="id_delete_article" type="submit" value="&#xf1f8;" >
                     <label class="control-item fas fa-trash" for="id_delete_article" title="{{ _('Delete article') }}" ></label>
                 </form>
-                <a class="control-item fas fa-book-open"  href="{{ url_for('main.reader', articleid=articlei.id)  }}"></a> 
-                <a class="control-item far fa-edit"  href="{{ url_for('main.editor', articleid=articlei.id)  }}"></a> 
-            </td>
-        </tr>
-</table> -->
+                <a class="control-item far fa-edit"  href="{{ url_for('main.editor', articleid=articlei.id)  }}"></a>
+                {% endif %}
+                <a class="control-item fas fa-book-open"  href="{{ url_for('main.reader', articleid=articlei.id)  }}"></a>                 
+            </div>
+            <div class="userabstracttext">{{ articlei.abstracthtml|safe }}</div>
+        </div>
+</div>

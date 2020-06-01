@@ -56,13 +56,16 @@ def index():
 # user home page
 from flask_login import login_required
 @bp.route('/user/<username>')
-@login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     deleteform = DeleteProfileForm()
     page = request.args.get('page', 1, type=int)
     # we need to set up in the add_columns the data in the templates
-    articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == current_user.id ).add_columns(  Article.id, Article.title, Article.abstracthtml, Article.titlehtml, Article.abstract, Article.status )
+    articles =   Article.query.order_by(Article.timestamp.desc()).join( WriterRelationship ).join(User).filter(User.id == user.id ).add_columns(  Article.id, Article.title, Article.abstracthtml, Article.titlehtml, Article.abstract, Article.status,(User.id).label("uid") )
+    print(articles[1].title)
+    print(articles[0].title)
+    print(articles[2].title)
+    print(articles[3].title)
     return render_template('user.html', language=g.locale, user=user, articles=articles, deleteform=deleteform )
 
 # reading an article
@@ -275,6 +278,7 @@ def markdownsave():
 
         # if anything changed
         if change:
+            a.timestamp = datetime.datetime.utcnow()
             db.session.commit()
     
     # return a OK json 
@@ -365,7 +369,6 @@ def search():
     if not g.search_form.validate():
         return redirect(url_for('main.index'))
     page = request.args.get('page', 1, type=int)
-    deleteform = DeleteProfileForm()
     articles, total = Article.search(g.search_form.q.data, page,
                                current_app.config['ARTICLE_PER_PAGE'])
     next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
@@ -373,7 +376,7 @@ def search():
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
     return render_template('search.html', language=g.locale, title='Search', articles=articles,
-                           next_url=next_url, deleteform=deleteform, prev_url=prev_url)
+                           next_url=next_url,  prev_url=prev_url, seachterm=g.search_form.q.data)
 
 
 # export the data to other formats

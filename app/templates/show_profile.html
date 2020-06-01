@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <div id="user_profil_overview" >
+        <div id="profile_overview">            
+                {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+                {% if user.last_seen %}<p>{{ _("Last seen on") }}: {{ user.last_seen }}</p>{% endif %}
+        </div>
+    </div>
+
+{% endblock %}

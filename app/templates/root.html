@@ -4,30 +4,33 @@
     <meta charset="UTF-8">
     <title>μr²</title>
 
+    {% include 'language_selector.html' %}
+    <link rel="stylesheet" href="/static/css/mur2.css">
     <style>
-
-#fullDiv {
-    height: 100%;
-    width: 100%;
-    left: 0;
-    top: 0;
-    overflow: hidden;
-    position: fixed;
-    text-align: center;
-}
-
-img {
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-
+        #fullDiv {
+            height: 100%;
+            width: 100%;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+            position: fixed;
+            text-align: center;
+            font-size: 280px;
+        }        
+        #fullDiv a {
+            position: relative;
+            top: calc(50% - 210px);
+            transform: translateY(-50%);
+            text-decoration: none;
+            color: #333;
+        }
     </style>
-</head>
-<body>
-    <div id="fullDiv">
-        <a href="{{ url_for('auth.login') }}"><img src="/static/images/Mur2_logo_gfsartemisia_it.png" alt="μr²"></a>
-    </div>
-</body>
+    </head>
+    <body>
+        <div id="fullDiv">
+            <a href="{{ url_for('auth.login') }}">
+            μr²
+            </a>
+        </div>
+    </body>
 </html>
