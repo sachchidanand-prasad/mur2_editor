@@ -134,7 +134,7 @@ def editor(articleid):
         
     timestamp = 0
     if article.timestamp is not None:
-        article.timestamp.replace(tzinfo=timezone.utc).timestamp()
+        timestamp = article.timestamp.replace(tzinfo=timezone.utc).timestamp()
         
     return render_template('editor.html', 
                            article_markdown=Markup(article.markdown
