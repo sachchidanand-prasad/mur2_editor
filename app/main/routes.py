@@ -35,7 +35,18 @@ def before_request():
         current_user.last_seen = datetime.datetime.utcnow()
         db.session.commit()
         g.search_form = SearchForm() # for search
-    g.locale = str(get_locale()) # for international languages
+    
+    
+    language =  str(get_locale()).split("_")
+    print(language)
+    if len(language) > 1 :
+        language = "_".join(language[:-1])
+    else:
+        language = language[0]
+    g.locale = language# for international languages
+    
+    
+    #g.locale = str(get_locale())
     print(g.locale)
     
     
@@ -428,6 +439,7 @@ def make_latex(mdtxt, title, abstract, language):
             with open(dirname+'settings.txt', 'w') as file:
                 file.write('---\ntitle: \''+title.replace("$$", "$")+"'"+
                            "\nabstract: '"+abstract.replace("$$", "$")+"'"+
+                           "\nmainfont: libertinusserif-regular.otf\nsansfont: libertinusserif-regular.otf\nmonofont: libertinusmono-regular.otf\nmathfont: latinmodern-math.otf" +
                           "\nlang: " + language +
                           "\ncsquotes: true" +
                           "\nheader-includes:\n    - \\usepackage[autostyle=true]{csquotes}" +
@@ -439,6 +451,7 @@ def make_latex(mdtxt, title, abstract, language):
                                      '-f', 'markdown', 
                                      '-t',  'latex', 
                                      '-V',  'CJKmainfont=Noto Serif CJK SC',
+                                     '--filter', 'pandoc-tablenos',
                                      '-s',                                      
                                      '-o', dirname+'mur2.tex'])
 
@@ -595,6 +608,7 @@ def exportdata():
                           "\ncsquotes: true" +
                           "\nheader-includes:\n    - \\usepackage[autostyle=true]{csquotes}" +
                           "\n---")
+            
             # save the abstract 
             with open(dirname+'abstract.txt', 'w') as file:
                 file.write("# {epub:type=abstract}\n"+article_abstract)
