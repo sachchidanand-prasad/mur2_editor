@@ -85,11 +85,11 @@ def user(username):
 from flask import Markup
 @bp.route('/reader/<articleid>')
 def reader(articleid):
-    a = Article.query.filter_by(id=articleid).join( WriterRelationship ).join(User).add_columns(  Article.html, Article.title,  Article.abstract, Article.status, Article.abstracthtml, Article.titlehtml,  Article.id, Article.timestamp, (User.id).label("uid"), User.username).first_or_404()
+    a = Article.query.filter_by(id=articleid).join( WriterRelationship ).join(User).add_columns(  Article.language, Article.html, Article.title,  Article.abstract, Article.status, Article.abstracthtml, Article.titlehtml,  Article.id, Article.timestamp, (User.id).label("uid"), User.username).first_or_404()
     ownarticle = False
     if hasattr(current_user, 'id') and a.uid == current_user.id :
         ownarticle = True 
-    return render_template('read.html', language=g.locale, article_content=Markup(a.html), 
+    return render_template('read.html', language=a.language, article_content=Markup(a.html), 
                            author=a.username, article=a, timestamp=a.timestamp.strftime('%Y–%m–%d'), ownarticle = ownarticle)
 
 # markdown editor
@@ -286,6 +286,9 @@ def markdownsave():
         if a.abstracthtml != article_abstract_html:
             change = True
             a.abstracthtml = article_abstract_html
+        if a.language != g.locale:
+            change = True
+            a.language = g.locale
 
         # if anything changed
         if change:
@@ -451,7 +454,7 @@ def make_latex(mdtxt, title, abstract, language):
                                      '-f', 'markdown', 
                                      '-t',  'latex', 
                                      '-V',  'CJKmainfont=Noto Serif CJK SC',
-                                     '--filter', 'pandoc-tablenos',
+                                     '--filter', 'pandoc-xnos',
                                      '-s',                                      
                                      '-o', dirname+'mur2.tex'])
 
@@ -555,6 +558,7 @@ def exportdata():
                                      '-f', 'markdown', 
                                      '-t',  'pdf', 
                                      '--pdf-engine=xelatex',
+                                     "--filter", "pandoc-xnos",
                                      '-V',  'CJKmainfont=Noto Serif CJK SC',
                                      '-s',                                      
                                      '-o', dirname+'mur2.pdf'])
@@ -619,6 +623,7 @@ def exportdata():
                                      mdname,
                                      '-f', 'markdown', 
                                      '-V',  'CJKmainfont=Noto Serif CJK SC', 
+                                     "--filter", "pandoc-tablenos",
                                      '-s', 
                                      '-o', dirname + 'mur2.epub'])    
             
